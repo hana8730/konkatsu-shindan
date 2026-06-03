@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>婚活適性パラメーター診断アプリ</title>
+    <!-- 紙吹雪用の軽量ライブラリを読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* --- アプリ用カラーパレットとリセット --- */
+        :root {
+            --primary-pink: #ff45b1;
+            --primary-hover: #e03299;
+            --bg-light-pink: #fff0f6;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --bg-white: #FFFFFF;
+            --shadow-sm: 0 4px 10px rgba(0,0,0,0.02);
+            --shadow-md: 0 10px 30px rgba(255, 69, 177, 0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: #fcfcfc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: var(--text-dark);
+            padding: 0;
+        }
+
+        .app-container {
+            background: var(--bg-white);
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: var(--shadow-md);
+        }
+
+        .view-section {
+            display: none;
+            opacity: 0;
+            transform: scale(0.98);
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .view-section.active {
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .text-center { text-align: center; }
+
+        .badge {
+            display: inline-block;
+            background: var(--bg-light-pink);
+            color: var(--primary-pink);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            letter-spacing: 0.03em;
+            align-self: center;
+        }
+
+        h1 {
+            font-size: 1.45rem;
+            line-height: 1.4;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        h1 span {
+            font-size: 0.95rem;
+            display: block;
+            color: var(--primary-pink);
+            margin-bottom: 6px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #eeeeee;
+            border-radius: 14px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            background: #fafafa;
+            transition: var(--transition);
+            user-select: text;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+            background: #ffffff;
+        }
+
+        .error-message {
+            color: #ff3366;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            display: none;
+            text-align: left;
+            padding-left: 4px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-pink);
+            color: var(--bg-white);
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            background: var(--primary-hover);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 5px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--primary-pink);
+            transition: width 0.2s ease;
+        }
+
+        .question-number {
+            font-size: 0.85rem;
+            color: var(--primary-pink);
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: bold;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: var(--bg-white);
+            border: 2px solid #f0f0f0;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+            line-height: 1.4;
+        }
+
+        .option-btn:active {
+            border-color: var(--primary-pink);
+            background: var(--bg-light-pink);
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto 15px;
+        }
+
+        .radar-label {
+            font-size: 11px;
+            font-weight: bold;
+            fill: var(--text-dark);
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            background: #fafafa;
+            padding: 10px 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            border: 1px solid #f0f0f0;
+        }
+
+        .score-item span { color: var(--text-muted); }
+
+        .score-item .score-val {
+            color: var(--primary-pink);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .result-description {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid #f0f0f0;
+        }
+
+        .advice-title {
+            font-weight: bold;
+            color: var(--primary-pink);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .cta-container {
+            background: var(--bg-light-pink);
+            border-radius: 16px;
+            padding: 22px 16px;
+            margin-bottom: 20px;
+            border: 1px solid #ffe3f2;
+        }
+
+        .cta-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-pink);
+            margin-bottom: 8px;
+        }
+
+        .cta-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. スタート画面 -->
+        <section id="start-view" class="view-section active text-center">
+            <span class="badge">本音で答える診断アプリ</span>
+            <h1><span>本気の価値観から最適なスタイルを測定</span>婚活スタイル適性診断</h1>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="user-name">お名前（ニックネーム可）</label>
+                <input type="text" id="user-name" class="input-field" placeholder="例：まゆ、たかし" maxlength="15">
+                <div class="error-message" id="name-error">お名前を入力してください</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label for="user-age">ご年齢</label>
+                <input type="number" id="user-age" class="input-field" placeholder="例：30" min="18" max="99" pattern="\d*">
+                <div class="error-message" id="age-error">正しい年齢を入力してください（18〜99歳）</div>
+            </div>
+
+            <button class="btn" id="start-btn">診断を始める</button>
+        </section>
+
+        <!-- 2. 診断中画面 -->
+        <section id="question-view" class="view-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="question-number" id="question-number">質問 1 / 9</div>
+            <div class="question-text" id="question-text">質問文</div>
+            <div class="options-list" id="options-container"></div>
+        </section>
+
+        <!-- 3. 結果画面 -->
+        <section id="result-view" class="view-section text-center">
+            <span class="badge">診断結果</span>
+            <div id="user-profile-badge" style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); margin-bottom: 5px;"></div>
+            <h2 id="result-title" style="font-size: 1.25rem; margin-bottom: 15px; color: var(--text-dark);"></h2>
+
+            <div class="chart-container">
+                <svg width="280" height="260" viewBox="0 0 320 300" id="radar-svg">
+                    <g id="grid-group"></g>
+                    <g id="axis-group"></g>
+                    <polygon id="data-polygon" points="" fill="rgba(255, 69, 177, 0.22)" stroke="#ff45b1" stroke-width="2.5"></polygon>
+                    <g id="dots-group"></g>
+                    <text x="160" y="22" text-anchor="middle" class="radar-label">中身重視</text>
+                    <text x="295" y="110" text-anchor="start" class="radar-label">アドバイス</text>
+                    <text x="250" y="255" text-anchor="start" class="radar-label">自己理解</text>
+                    <text x="70" y="255" text-anchor="end" class="radar-label">条件明確</text>
+                    <text x="25" y="110" text-anchor="end" class="radar-label">安全重視</text>
+                </svg>
+            </div>
+
+            <div class="scores-grid">
+                <div class="score-item"><span>中身重視</span><span class="score-val" id="val-nakami">0%</span></div>
+                <div class="score-item"><span>アドバイス</span><span class="score-val" id="val-advice">0%</span></div>
+                <div class="score-item"><span>自己理解</span><span class="score-val" id="val-jiko">0%</span></div>
+                <div class="score-item"><span>条件明確</span><span class="score-val" id="val-jouken">0%</span></div>
+                <div class="score-item"><span>安全重視</span><span class="score-val" id="val-anzen">0%</span></div>
+            </div>
+
+            <div class="result-description">
+                <div class="advice-title">💡 あなたの分析結果</div>
+                <p id="result-text" style="margin-bottom: 15px; font-size: 0.85rem; color: var(--text-muted);"></p>
+                <div class="advice-title">🎯 アクションプラン</div>
+                <p id="result-advice" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+            </div>
+
+            <div class="cta-container">
+                <h3 class="cta-title">専任プロによる個別カウンセリング</h3>
+                <p class="cta-desc">診断結果をふまえ、あなたにピッタリな具体的なアプローチや、現在のリアルな婚活データをチャットで詳しくお伝えします。</p>
+                <a href="https://example.com/chat-support" target="_blank" class="btn" id="cta-btn">プロのアドバイスをチャットで受け取る</a>
+            </div>
+
+            <button class="btn" id="restart-btn" style="background: transparent; color: var(--text-muted); box-shadow: none; border: 1.5px solid #e0e0e0; margin-top: 10px;">もう一度診断する</button>
+        </section>
+
+    </div>
+
+    <script>
+        const questions = [
+            {
+                text: "お相手を選ぶ際、ルックスや外見の好みはどれくらい重視しますか？",
+                options: [
+                    { text: "外見よりも、性格や相性など「中身」を最重視したい", scores: { nakami: 25, advice: 0, jiko: 20, jouken: 0, anzen: 5 } },
+                    { text: "ある程度は好みの外見であってほしい（清潔感レベル）", scores: { nakami: 10, advice: 0, jiko: 15, jouken: 10, anzen: 0 } },
+                    { text: "外見の好みが第一条件（直感的なビジュアル重視）", scores: { nakami: 0, advice: 0, jiko: 25, jouken: 25, anzen: 0 } }
+                ]
+            },
+            {
+                text: "「相手の親との同居可否」など、将来のシビアな条件は会う前に最初から知りたいですか？",
+                options: [
+                    { text: "事前にハッキリ知ってミスマッチを徹底的に防ぎたい", scores: { nakami: 5, advice: 5, jiko: 20, jouken: 25, anzen: 15 } },
+                    { text: "条件としては気になるが、まずは会って仲良くなってから確認したい", scores: { nakami: 15, advice: 0, jiko: 15, jouken: 12, anzen: 5 } },
+                    { text: "同居の有無やそのあたりの条件は特に気にしない", scores: { nakami: 20, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "お相手に求める年齢の希望ストライクゾーン（許容範囲）はどれくらいですか？",
+                options: [
+                    { text: "自分の年齢から「±5歳以内」で明確に絞り込みたい", scores: { nakami: 0, advice: 0, jiko: 20, jouken: 25, anzen: 5 } },
+                    { text: "自分の年齢から「±7歳以内」であれば幅を持たせて許容できる", scores: { nakami: 8, advice: 0, jiko: 15, jouken: 15, anzen: 5 } },
+                    { text: "年齢の条件は全く気にしない（相性やフィーリング重視）", scores: { nakami: 25, advice: 5, jiko: 20, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "結婚後の「家事や育児の分担方針」に関する情報を、事前に知りたいですか？",
+                options: [
+                    { text: "結婚生活のズレを防ぐため、プロフィール等で詳しく事前に把握したい", scores: { nakami: 25, advice: 5, jiko: 20, jouken: 20, anzen: 10 } },
+                    { text: "大まかな方針だけ把握し、詳細は付き合う中で相談したい", scores: { nakami: 15, advice: 0, jiko: 15, jouken: 10, anzen: 5 } },
+                    { text: "事前の情報はいらない、共同生活の中で都度話し合えば良い", scores: { nakami: 5, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "お相手の「年収や経済力」は、公的な証明書付きの正確な情報がわかると嬉しいですか？",
+                options: [
+                    { text: "信頼できる正確な情報を、会う前の大前提条件として知っておきたい", scores: { nakami: 0, advice: 5, jiko: 20, jouken: 25, anzen: 20 } },
+                    { text: "自己申告ベースで大まかに目安が分かっていれば十分", scores: { nakami: 10, advice: 0, jiko: 15, jouken: 12, anzen: 5 } },
+                    { text: "相手の経済力や年収データにはそこまでこだわらない", scores: { nakami: 20, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "お相手の身元保証（独身証明や職業証明の提出など）の確実性はどのくらい求めますか？",
+                options: [
+                    { text: "トラブルを徹底排除したいので、100%嘘のない保証された環境が良い", scores: { nakami: 0, advice: 10, jiko: 15, jouken: 10, anzen: 25 } },
+                    { text: "最低限の年齢確認等があれば良く、そこまで厳格でなくても良い", scores: { nakami: 10, advice: 0, jiko: 15, jouken: 5, anzen: 10 } },
+                    { text: "登録の手続きの手軽さを最優先し、カジュアルに出会いたい", scores: { nakami: 15, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "メッセージ交換を重ねたのに、直前でドタキャンされるようなタイムロスについてどう思いますか？",
+                options: [
+                    { text: "時間の無駄なので絶対に避けたい（規約やペナルティが厳格な方が良い）", scores: { nakami: 0, advice: 10, jiko: 20, jouken: 15, anzen: 15 } },
+                    { text: "ドタキャンは嫌だが、婚活を進める上である程度は仕方ないと思える", scores: { nakami: 8, advice: 0, jiko: 15, jouken: 8, anzen: 5 } },
+                    { text: "自由なツールなので、何があってもあまり気にせず割り切れる", scores: { nakami: 15, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "写真の過度な加工やギャップに振り回されて、精神的に消耗するのは防ぎたいですか？",
+                options: [
+                    { text: "非常にそう思う（最初から本当の姿や、誠実な人と確実に出会いたい）", scores: { nakami: 20, advice: 5, jiko: 15, jouken: 10, anzen: 10 } },
+                    { text: "多少のギャップは覚悟しているが、あまりに酷いものは避けたい", scores: { nakami: 12, advice: 0, jiko: 15, jouken: 5, anzen: 5 } },
+                    { text: "写真はあくまで参考なので、実物と違ってもそこまで気にならない", scores: { nakami: 5, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            },
+            {
+                text: "活動中の悩み相談、プロポーズの進め方について、プロのアドバイスやサポートは必要ですか？",
+                options: [
+                    { text: "客観的な意見をくれるカウンセラーのサポートや仲介が絶対に欲しい", scores: { nakami: 5, advice: 50, jiko: 20, jouken: 10, anzen: 10 } },
+                    { text: "基本は自分で進めたいが、チャット等で困った時だけ相談できれば嬉しい", scores: { nakami: 10, advice: 25, jiko: 15, jouken: 5, anzen: 5 } },
+                    { text: "誰にも一切干渉されず、すべて自分の力と裁量だけで進めたい", scores: { nakami: 15, advice: 0, jiko: 10, jouken: 0, anzen: 0 } }
+                ]
+            }
+        ];
+
+        // 各パラメーターの最大合計値を動的集計
+        const maxScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
+        questions.forEach(q => {
+            ['nakami', 'advice', 'jiko', 'jouken', 'anzen'].forEach(key => {
+                let maxVal = 0;
+                q.options.forEach(opt => {
+                    if (opt.scores[key] !== undefined) maxVal = Math.max(maxVal, opt.scores[key]);
+                });
+                maxScores[key] += maxVal;
+            });
+        });
+
+        let currentQuestionIndex = 0;
+        let userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
+        let userName = "";
+        let userAge = "";
+
+        const startView    = document.getElementById('start-view');
+        const questionView = document.getElementById('question-view');
+        const resultView   = document.getElementById('result-view');
+
+        document.getElementById('start-btn').addEventListener('click', validateAndStart);
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
+            currentQuestionIndex = 0;
+            switchView(questionView);
+            showQuestion();
+        });
+
+        function switchView(viewElement) {
+            [startView, questionView, resultView].forEach(v => v.classList.remove('active'));
+            viewElement.classList.add('active');
+        }
+
+        function validateAndStart() {
+            const nameVal = document.getElementById('user-name').value.trim();
+            const ageVal  = document.getElementById('user-age').value.trim();
+            let valid = true;
+
+            if (!nameVal) {
+                document.getElementById('name-error').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('name-error').style.display = 'none';
+            }
+
+            const ageNum = parseInt(ageVal, 10);
+            if (!ageVal || isNaN(ageNum) || ageNum < 18 || ageNum > 99) {
+                document.getElementById('age-error').style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById('age-error').style.display = 'none';
+            }
+
+            if (!valid) return;
+            userName = nameVal;
+            userAge  = ageVal;
+            userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
+            currentQuestionIndex = 0;
+            switchView(questionView);
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById('progress-bar').style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
+            document.getElementById('question-number').textContent = `質問 ${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById('question-text').textContent = q.text;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            q.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option.text;
+                btn.onclick = () => {
+                    for (const key in option.scores) {
+                        if (userScores[key] !== undefined) userScores[key] += option.scores[key];
+                    }
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < questions.length) {
+                        showQuestion();
+                    } else {
+                        document.getElementById('progress-bar').style.width = '100%';
+                        setTimeout(showResult, 250);
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbygGQ924XbZUZTuof8ZLSjGtXRuknrkR8JnK9BvVOvIbmu0QWlmOAhyKPJcUhlIq7_l5w/exec';
+
+        function sendToSpreadsheet(data) {
+            fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(() => {}); // 通信エラーは無視（診断体験は継続）
+        }
+
+        function showResult() {
+            switchView(resultView);
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ff45b1', '#ff85cd', '#ffe3f2', '#ffcd3c', '#4deeea']
+                });
+            }
+
+            document.getElementById('user-profile-badge').textContent = `${userName} 様 (${userAge}歳) の診断結果`;
+
+            const pct = {};
+            for (const key in userScores) {
+                pct[key] = Math.max(15, Math.min(Math.round((userScores[key] / maxScores[key]) * 100), 100));
+            }
+
+            document.getElementById('val-nakami').textContent = `${pct.nakami}%`;
+            document.getElementById('val-advice').textContent = `${pct.advice}%`;
+            document.getElementById('val-jiko').textContent   = `${pct.jiko}%`;
+            document.getElementById('val-jouken').textContent = `${pct.jouken}%`;
+            document.getElementById('val-anzen').textContent  = `${pct.anzen}%`;
+
+            const total = pct.jouken + pct.anzen + pct.advice;
+            let resultType = '';
+
+            if (total >= 180) {
+                resultType = '結婚相談所スタイル';
+                document.getElementById('result-title').innerHTML =
+                    `あなたに最適なのは<br><span style="color:var(--primary-pink); font-size:1.4rem;">結婚相談所スタイル</span>`;
+                document.getElementById('result-text').textContent =
+                    "年収、親との同居条件、家事や育児の分担方針まで、事前に入手した上でタイムロスなく安全に活動したいタイプです。身元が厳重に保証され、ドタキャンのない厳格な環境で最高のパートナーをスムーズに見つけられます。";
+                document.getElementById('result-advice').textContent =
+                    "最初から結婚意欲が高い人だけが集まる場所を選ぶことが、時間を無駄にせず理想を掴み取るための近道です。";
+            } else if (total >= 115) {
+                resultType = 'ハイブリッドスタイル';
+                document.getElementById('result-title').innerHTML =
+                    `あなたに最適なのは<br><span style="color:var(--primary-pink); font-size:1.35rem;">ハイブリッドスタイル</span>`;
+                document.getElementById('result-text').textContent =
+                    "事前の条件（年収や同居等）は把握したい半面、フィーリングや自分の力で見極める楽しさも大切にしたいスマートなバランス型です。アプリの手軽さと、相談所の確実性をいいとこ取りできます。";
+                document.getElementById('result-advice').textContent =
+                    "身元審査が厳しい特化型婚活アプリの活用や、オンライン結婚相談所を視野に入れると、ストレスなく活動を進められます。";
+            } else {
+                resultType = 'マッチングアプリスタイル';
+                document.getElementById('result-title').innerHTML =
+                    `あなたに最適なのは<br><span style="color:var(--primary-pink); font-size:1.4rem;">マッチングアプリスタイル</span>`;
+                document.getElementById('result-text').textContent =
+                    "直感やルックス、会話の波長を重視し、最初はシビアな結婚条件に縛られすぎずカジュアルな恋愛関係から積み上げたい自由派タイプです。いまは母数の多い環境がぴったり合っています。";
+                document.getElementById('result-advice').textContent =
+                    "アプリで出会いを広げつつ、もし「進め方に迷った」「より真剣な層に絞り込みたい」と感じた場合は、データ分析を試してみるのが効果的です。";
+            }
+
+            // スプレッドシートへ送信
+            sendToSpreadsheet({
+                timestamp: new Date().toLocaleString('ja-JP'),
+                name:      userName,
+                age:       userAge,
+                result:    resultType,
+                nakami:    pct.nakami,
+                advice:    pct.advice,
+                jiko:      pct.jiko,
+                jouken:    pct.jouken,
+                anzen:     pct.anzen
+            });
+
+            drawRadarChart(pct);
+        }
+
+        // --- レーダーチャート ---
+        const cx = 160, cy = 150, rMax = 82, totalSides = 5;
+        const angles = Array.from({ length: totalSides }, (_, i) =>
+            (i * 2 * Math.PI / totalSides) - Math.PI / 2
+        );
+
+        (function initRadarGrid() {
+            const gridGroup = document.getElementById('grid-group');
+            const axisGroup = document.getElementById('axis-group');
+            for (let j = 1; j <= 4; j++) {
+                const r = rMax * (j / 4);
+                const pts = angles.map(a => `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`).join(' ');
+                const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                poly.setAttribute('points', pts);
+                poly.setAttribute('fill', 'none');
+                poly.setAttribute('stroke', '#f5f5f5');
+                poly.setAttribute('stroke-width', '1');
+                gridGroup.appendChild(poly);
+            }
+            angles.forEach(a => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+                line.setAttribute('x2', cx + rMax * Math.cos(a));
+                line.setAttribute('y2', cy + rMax * Math.sin(a));
+                line.setAttribute('stroke', '#f0f0f0');
+                line.setAttribute('stroke-width', '1.5');
+                axisGroup.appendChild(line);
+            });
+        })();
+
+        function drawRadarChart(pct) {
+            const keys = ['nakami', 'advice', 'jiko', 'jouken', 'anzen'];
+            const dotsGroup = document.getElementById('dots-group');
+            dotsGroup.innerHTML = '';
+            const pts = keys.map((key, i) => {
+                const r = rMax * (pct[key] / 100);
+                const x = cx + r * Math.cos(angles[i]);
+                const y = cy + r * Math.sin(angles[i]);
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+                circle.setAttribute('r', '4.5');
+                circle.setAttribute('fill', 'var(--primary-pink)');
+                circle.setAttribute('stroke', '#ffffff');
+                circle.setAttribute('stroke-width', '1.5');
+                dotsGroup.appendChild(circle);
+                return `${x},${y}`;
+            });
+            document.getElementById('data-polygon').setAttribute('points', pts.join(' '));
+        }
+    </script>
+</body>
+</html>
