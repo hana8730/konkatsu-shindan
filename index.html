@@ -560,12 +560,48 @@
             switchView(resultView);
 
             if (typeof confetti === 'function') {
+                // くす玉が割れて紙吹雪が舞い散るような演出
+                const kusudamaColors = ['#ff45b1', '#ff85cd', '#ffe3f2', '#ffcd3c', '#4deeea', '#ffffff'];
+
+                // 中心（くす玉本体）でパッと弾ける
                 confetti({
-                    particleCount: 120,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#ff45b1', '#ff85cd', '#ffe3f2', '#ffcd3c', '#4deeea']
+                    particleCount: 60,
+                    spread: 360,
+                    startVelocity: 25,
+                    ticks: 60,
+                    origin: { x: 0.5, y: 0.35 },
+                    colors: kusudamaColors,
+                    scalar: 0.9
                 });
+
+                // 左右に大きく開いて舞い散る紙吹雪
+                const burst = (xOrigin, angle) => {
+                    confetti({
+                        particleCount: 100,
+                        angle: angle,
+                        spread: 80,
+                        startVelocity: 45,
+                        gravity: 0.9,
+                        ticks: 200,
+                        origin: { x: xOrigin, y: 0.4 },
+                        colors: kusudamaColors
+                    });
+                };
+                burst(0.2, 60);
+                burst(0.8, 120);
+
+                // 少し遅れて追加の舞い散りで余韻を演出
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 80,
+                        spread: 100,
+                        startVelocity: 30,
+                        gravity: 0.7,
+                        ticks: 250,
+                        origin: { x: 0.5, y: 0.3 },
+                        colors: kusudamaColors
+                    });
+                }, 250);
             }
 
             document.getElementById('user-profile-badge').textContent = `${userName} 様 (${userAge}歳) の診断結果`;
