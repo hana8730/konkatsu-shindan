@@ -307,19 +307,7 @@
             <span class="badge">本音で答える診断アプリ</span>
             <h1><span>本気の価値観から最適なスタイルを測定</span>婚活スタイル適性診断</h1>
 
-            <div class="form-group" style="margin-top: 10px;">
-                <label for="user-name">お名前（ニックネーム可）</label>
-                <input type="text" id="user-name" class="input-field" placeholder="例：まゆ、たかし" maxlength="15">
-                <div class="error-message" id="name-error">お名前を入力してください</div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 30px;">
-                <label for="user-age">ご年齢</label>
-                <input type="number" id="user-age" class="input-field" placeholder="例：30" min="18" max="99" pattern="\d*">
-                <div class="error-message" id="age-error">正しい年齢を入力してください（18〜99歳）</div>
-            </div>
-
-            <button class="btn" id="start-btn">診断を始める</button>
+            <button class="btn" id="start-btn" style="margin-top: 20px;">診断を始める</button>
         </section>
 
         <!-- 2. 診断中画面 -->
@@ -467,8 +455,6 @@
 
         let currentQuestionIndex = 0;
         let userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
-        let userName = "";
-        let userAge = "";
 
         const startView    = document.getElementById('start-view');
         const questionView = document.getElementById('question-view');
@@ -488,28 +474,6 @@
         }
 
         function validateAndStart() {
-            const nameVal = document.getElementById('user-name').value.trim();
-            const ageVal  = document.getElementById('user-age').value.trim();
-            let valid = true;
-
-            if (!nameVal) {
-                document.getElementById('name-error').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('name-error').style.display = 'none';
-            }
-
-            const ageNum = parseInt(ageVal, 10);
-            if (!ageVal || isNaN(ageNum) || ageNum < 18 || ageNum > 99) {
-                document.getElementById('age-error').style.display = 'block';
-                valid = false;
-            } else {
-                document.getElementById('age-error').style.display = 'none';
-            }
-
-            if (!valid) return;
-            userName = nameVal;
-            userAge  = ageVal;
             userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
             currentQuestionIndex = 0;
             switchView(questionView);
@@ -603,7 +567,7 @@
                 }, 250);
             }
 
-            document.getElementById('user-profile-badge').textContent = `${userName} 様 (${userAge}歳) の診断結果`;
+            document.getElementById('user-profile-badge').textContent = `あなたの診断結果`;
 
             const pct = {};
             for (const key in userScores) {
@@ -648,8 +612,6 @@
             // スプレッドシートへ送信
             sendToSpreadsheet({
                 timestamp: new Date().toLocaleString('ja-JP'),
-                name:      userName,
-                age:       userAge,
                 result:    resultType,
                 nakami:    pct.nakami,
                 advice:    pct.advice,
