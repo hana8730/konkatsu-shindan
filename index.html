@@ -473,12 +473,6 @@
         const resultView   = document.getElementById('result-view');
 
         document.getElementById('start-btn').addEventListener('click', validateAndStart);
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            userScores = { nakami: 0, advice: 0, jiko: 0, jouken: 0, anzen: 0 };
-            currentQuestionIndex = 0;
-            switchView(questionView);
-            showQuestion();
-        });
 
         function switchView(viewElement) {
             [startView, questionView, resultView].forEach(v => v.classList.remove('active'));
