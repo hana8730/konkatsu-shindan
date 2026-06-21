@@ -375,8 +375,8 @@
             </div>
 
             <div class="cta-container">
-                <h3 class="cta-title">IBJ正規代理店が伝える秘話</h3>
-                <p class="cta-desc">４１歳女性が１１人の<br>男性からお申し込み！<br><br>半年で結婚できた流れを<br>１０分の動画講座にしました<br><br>LINEに登録後<br>「診断」漢字2文字を<br>送信してください<br><br>無料で視聴できます</p>
+                <h3 class="cta-title" id="cta-title">IBJ正規代理店が伝える秘話</h3>
+                <p class="cta-desc" id="cta-desc"></p>
                 <a href="https://lin.ee/qYCi0W9" target="_blank" class="btn" id="cta-btn">LINEに登録する</a>
             </div>
 
@@ -604,6 +604,8 @@
                     "年収、親との同居条件、家事や育児の分担方針まで、事前に入手した上でタイムロスなく安全に活動したいタイプです。身元が厳重に保証され、ドタキャンのない厳格な環境で最高のパートナーをスムーズに見つけられます。";
                 document.getElementById('result-advice').textContent =
                     "最初から結婚意欲が高い人だけが集まる場所を選ぶことが、時間を無駄にせず理想を掴み取るための近道です。";
+                document.getElementById('cta-title').textContent = 'IBJ正規代理店が伝える秘話';
+                document.getElementById('cta-desc').innerHTML = '４１歳女性が１１人の<br>男性からお申し込み！<br><br>半年で結婚できた流れを<br>１０分の動画講座にしました<br><br>LINEに登録後<br>「診断」漢字2文字を<br>送信してください<br><br>無料で視聴できます';
             } else if (total >= 115) {
                 resultType = 'ハイブリッドスタイル';
                 document.getElementById('result-title').innerHTML =
@@ -612,6 +614,8 @@
                     "事前の条件（年収や同居等）は把握したい半面、フィーリングや自分の力で見極める楽しさも大切にしたいスマートなバランス型です。アプリの手軽さと、相談所の確実性をいいとこ取りできます。";
                 document.getElementById('result-advice').textContent =
                     "身元審査が厳しい特化型婚活アプリの活用や、オンライン結婚相談所を視野に入れると、ストレスなく活動を進められます。";
+                document.getElementById('cta-title').textContent = '婚活２年で迷走した女性の話';
+                document.getElementById('cta-desc').innerHTML = '婚活２年で迷走→<br>方法を変えて半年で<br>結婚できた理由を<br>１０分の動画講座にしました<br><br>LINEに登録後<br>「診断」漢字2文字を<br>送信してください<br><br>無料で視聴できます';
             } else {
                 resultType = 'マッチングアプリスタイル';
                 document.getElementById('result-title').innerHTML =
@@ -620,6 +624,8 @@
                     "直感やルックス、会話の波長を重視し、最初はシビアな結婚条件に縛られすぎずカジュアルな恋愛関係から積み上げたい自由派タイプです。いまは母数の多い環境がぴったり合っています。";
                 document.getElementById('result-advice').textContent =
                     "アプリで出会いを広げつつ、もし「進め方に迷った」「より真剣な層に絞り込みたい」と感じた場合は、データ分析を試してみるのが効果的です。";
+                document.getElementById('cta-title').textContent = '出会えるのに進展しない…';
+                document.getElementById('cta-desc').innerHTML = '出会えるのに進展しない…<br>その本当の原因とは？<br><br>１０分の動画講座で解説しています<br><br>LINEに登録後<br>「診断」漢字2文字を<br>送信してください<br><br>無料で視聴できます';
             }
 
             // Meta Pixel：診断完了イベント
