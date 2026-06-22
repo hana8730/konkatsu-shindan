@@ -480,6 +480,11 @@
 
         document.getElementById('start-btn').addEventListener('click', validateAndStart);
 
+        // URLに ?start=auto がある場合は自動スタート
+        if (new URLSearchParams(window.location.search).get('start') === 'auto') {
+            validateAndStart();
+        }
+
         function switchView(viewElement) {
             [startView, questionView, resultView].forEach(v => v.classList.remove('active'));
             viewElement.classList.add('active');
